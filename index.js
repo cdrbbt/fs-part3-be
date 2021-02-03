@@ -4,6 +4,7 @@ const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
+const { response } = require('express')
 
 app.use(cors())
 app.use(express.json())
@@ -82,11 +83,19 @@ app.get('/api/persons/:id', (req, res) => {
   }
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  persons = persons.filter(p => p.id !== id)
-  res.status(204).end()
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+  .then(result => {
+    res.status(204).end()
+  }).catch(error => next(error))
 })
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message)
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, ()=> {
