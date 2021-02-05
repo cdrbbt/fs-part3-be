@@ -49,6 +49,8 @@ app.get('/info', (req, res) => {
 app.get('/api/persons', (req, res) => {
   Person.find().then(persons =>{
     res.json(persons)
+  }).catch( error => {
+    next({error, msg:'failed to fetch persons list'})
   })
 })
 
@@ -70,6 +72,8 @@ app.post('/api/persons', (req, res) => {
 
   person.save().then(newPerson => {
     res.json(newPerson)
+  }).catch(error => {
+    next({error, msg:'failed to save to db'})
   })
 })
 
@@ -83,6 +87,10 @@ app.get('/api/persons/:id', (req, res) => {
   }
 })
 
+app.put('/api/persons/:id', (req, res, next) => {
+  return
+})
+
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
   .then(result => {
@@ -91,8 +99,8 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 const errorHandler = (error, req, res, next) => {
-  console.error(error.message)
-  next(error)
+  console.error(error)
+  res.status(500).send({error:error.msg})
 }
 
 app.use(errorHandler)
