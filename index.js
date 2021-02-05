@@ -58,31 +58,24 @@ app.get('/api/persons', (req, res) => {
   })
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
   if (!body.name || !body.number) {
     return res.status(400).json({ error: 'missing data' })
   }
 
-  Person.findOne({ name: body.name }).then(person => {
-    console.log('after searching for person')
-    console.log(person)
-    if (person) {
-      return res.status(400).json({ error: 'person alraedy in db', id: person.id })
-    }
-    const newPerson = new Person({
-      name: body.name,
-      number: body.number,
-    })
-
-    newPerson.save().then(p => {
-      res.json(p)
-    }).catch(error => {
-      next({ error, msg: 'failed to save to db' })
-    })
-
+  const newPerson = new Person({
+    name: body.name,
+    number: body.number,
   })
+
+  newPerson.save().then(p => {
+    res.json(p)
+  }).catch(error => {
+    next({ error, msg: 'failed to save to db' })
+  })
+
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
@@ -94,7 +87,7 @@ app.get('/api/persons/:id', (req, res, next) => {
       res.status(404).end()
     }
   }).catch(error => {
-    next({error, msg:'failed to get person'})
+    next({ error, msg: 'failed to get person' })
   })
 })
 
@@ -122,7 +115,10 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 const errorHandler = (error, req, res, next) => {
-  console.error(error)
+  console.error(error.error.name)
+  if (error.error.name === 'ValidationError') {
+    return res.status(400).json({error: error.error.message})
+  }
   res.status(500).send({ error: error.msg })
 }
 
