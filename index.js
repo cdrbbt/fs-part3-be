@@ -4,43 +4,14 @@ const app = express()
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
-const { response } = require('express')
 
 app.use(cors())
 app.use(express.json())
 app.use(express.static('build'))
 
-morgan.token('body', (req, res) => JSON.stringify(req.body))
+// eslint-disable-next-line no-unused-vars
+morgan.token('body', (req, _res) => JSON.stringify(req.body))
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
-
-
-
-let persons = [
-  {
-    name: "Arto Hellas",
-    number: "040-123456",
-    id: 1
-  },
-  {
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-    id: 2
-  },
-  {
-    name: "Dan Abramov",
-    number: "12-43-234345",
-    id: 3
-  },
-  {
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-    id: 4
-  }
-]
-
-const generateId = () => {
-  return Math.floor(Math.random() * 10000000)
-}
 
 app.get('/info', (req, res, next) => {
   Person.estimatedDocumentCount().then(c => {
@@ -50,7 +21,7 @@ app.get('/info', (req, res, next) => {
   })
 })
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
   Person.find().then(persons => {
     res.json(persons)
   }).catch(error => {
@@ -109,21 +80,22 @@ app.put('/api/persons/:id', (req, res, next) => {
 
 app.delete('/api/persons/:id', (req, res, next) => {
   Person.findByIdAndRemove(req.params.id)
-    .then(result => {
+    .then(() => {
       res.status(204).end()
     }).catch(error => next(error))
 })
 
-const errorHandler = (error, req, res, next) => {
+const errorHandler = (error, req, res) => {
   console.error(error.error.name)
   if (error.error.name === 'ValidationError') {
-    return res.status(400).json({error: error.error.message})
+    return res.status(400).json({ error: error.error.message })
   }
   res.status(500).send({ error: error.msg })
 }
 
 app.use(errorHandler)
 
+// eslint-disable-next-line no-undef
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Server on port ${PORT}`)
